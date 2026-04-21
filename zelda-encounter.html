@@ -8,8 +8,707 @@
     <link rel="stylesheet" href="main.css" media="nope!" onload="this.media='all'">
   </head>
   <body>
+    <style>
+      /* Root variables */
+      :root {
+        --gold:#C9A84C;--gold-light:#F0D080;--gold-dark:#7A5C1E;--gold-dim:#2E2010;
+        --bg:#0D0A04;--bg2:#1A1208;--bg3:#221608;--bg4:#2E2010;--panel:#1A1008;
+        --border:rgba(201,168,76,0.2);--border-s:rgba(201,168,76,0.55);
+        --text:#F5E8C0;--text-dim:#9A8050;--text-muted:#4A3820;
+        --green-l:#4DAA70;--red-l:#CC3333;--amber-l:#C87820;--blue-l:#4A8ACA;
+      }
+      *{box-sizing:border-box;margin:0;padding:0}
+      body{background:var(--bg);color:var(--text);font-family:'Crimson Text',Georgia,serif;font-size:16px;min-height:100vh;overflow-x:hidden}
+      body::before{content:'';position:fixed;inset:0;background-image:repeating-linear-gradient(0deg,transparent,transparent 39px,rgba(201,168,76,0.03) 40px),repeating-linear-gradient(90deg,transparent,transparent 39px,rgba(201,168,76,0.03) 40px);pointer-events:none;z-index:0}
+      .app{position:relative;z-index:1;max-width:1080px;margin:0 auto;padding:0 16px 48px}
+
+      /* Header */
+      header{text-align:center;padding:28px 0 20px;border-bottom:1px solid var(--border);margin-bottom:20px;position:relative}
+      header::after{content:'';position:absolute;bottom:-1px;left:50%;transform:translateX(-50%);width:180px;height:1px;background:linear-gradient(90deg,transparent,var(--gold),transparent)}
+      .tf{display:block;margin:0 auto 10px;width:32px;height:28px}
+      h1{font-family:'Cinzel',serif;font-size:20px;font-weight:700;letter-spacing:.12em;color:var(--gold-light);text-transform:uppercase}
+      .h1-sub{font-family:'Cinzel',serif;font-size:10px;letter-spacing:.3em;color:var(--text-dim);margin-top:3px;text-transform:uppercase}
+
+      /* Mode bar */
+      .mode-bar{display:flex;background:var(--bg2);border:1px solid var(--border);border-radius:6px;overflow:hidden;width:fit-content;margin:0 auto 20px}
+      .mbt{font-family:'Cinzel',serif;font-size:10px;letter-spacing:.15em;padding:8px 20px;border:none;background:transparent;color:var(--text-dim);cursor:pointer;transition:all .2s;text-transform:uppercase}
+      .mbt.active{background:var(--gold-dim);color:var(--gold-light);border-bottom:2px solid var(--gold)}
+      .mbt:hover:not(.active){color:var(--text);background:var(--bg3)}
+
+      /* Panel */
+      .panel{background:var(--panel);border:1px solid var(--border);border-radius:8px;padding:18px;margin-bottom:14px;position:relative;overflow:hidden}
+      .panel::before{content:'';position:absolute;top:0;left:0;right:0;height:1px;background:linear-gradient(90deg,transparent,var(--gold-dark),var(--gold),var(--gold-dark),transparent)}
+      .ptitle{font-family:'Cinzel',serif;font-size:10px;letter-spacing:.25em;color:var(--gold);text-transform:uppercase;margin-bottom:14px;display:flex;align-items:center;gap:10px}
+      .ptitle::after{content:'';flex:1;height:1px;background:var(--border)}
+
+      /* Select */
+      select{width:100%;background:var(--bg3);border:1px solid var(--border-s);border-radius:6px;color:var(--text);font-family:'Crimson Text',serif;font-size:15px;padding:10px 12px;cursor:pointer;appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%23C9A84C' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 12px center;outline:none;transition:border-color .2s}
+      select:focus{border-color:var(--gold)}
+      select option{background:var(--bg3)}
+
+      /* Quest */
+      .qgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:10px}
+      .qcard{background:var(--bg3);border:1px solid var(--border);border-radius:6px;padding:13px;cursor:pointer;transition:all .2s;position:relative;overflow:hidden}
+      .qcard::before{content:'';position:absolute;left:0;top:0;bottom:0;width:3px;background:transparent;transition:background .2s}
+      .qcard:hover{border-color:var(--gold-dark);transform:translateY(-1px)}
+      .qcard:hover::before{background:var(--gold-dark)}
+      .qcard.sel{border-color:var(--gold);background:rgba(201,168,76,0.06)}
+      .qcard.sel::before{background:var(--gold)}
+      .qname{font-family:'Cinzel',serif;font-size:12px;font-weight:600;color:var(--gold-light);margin-bottom:7px;line-height:1.4}
+      .qmeta{display:flex;gap:5px;flex-wrap:wrap;margin-bottom:5px}
+      .qloc{font-size:13px;color:var(--text-dim);font-style:italic}
+
+      /* Badge */
+      .badge{display:inline-block;font-family:'Cinzel',serif;font-size:9px;letter-spacing:.08em;padding:2px 7px;border-radius:2px;text-transform:uppercase;font-weight:600}
+      .bg{background:rgba(46,125,79,.25);color:#6DCC99;border:1px solid rgba(77,170,112,.35)}
+      .ba{background:rgba(122,80,16,.3);color:#E09030;border:1px solid rgba(200,120,32,.4)}
+      .bb{background:rgba(26,58,106,.35);color:#6A9FE0;border:1px solid rgba(58,106,170,.4)}
+      .br{background:rgba(139,32,32,.3);color:#E06060;border:1px solid rgba(204,51,51,.4)}
+      .bk{background:rgba(58,42,16,.6);color:var(--text-dim);border:1px solid var(--border)}
+      .bo{background:rgba(201,168,76,.12);color:var(--gold);border:1px solid rgba(201,168,76,.35)}
+
+      /* Detail */
+      .dgrid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+      @media(max-width:600px){.dgrid{grid-template-columns:1fr}}
+      .dblock{background:var(--bg3);border:1px solid var(--border);border-radius:6px;padding:11px;margin-bottom:8px}
+      .dlabel{font-family:'Cinzel',serif;font-size:9px;letter-spacing:.2em;color:var(--gold);text-transform:uppercase;margin-bottom:5px}
+      .dval{font-size:14px;color:var(--text);line-height:1.6}
+      .dval.italic{font-style:italic;color:var(--text-dim)}
+      textarea{width:100%;background:var(--bg2);border:1px solid var(--border);border-radius:6px;color:var(--text);font-family:'Crimson Text',serif;font-size:14px;padding:9px;resize:vertical;outline:none;transition:border-color .2s;min-height:72px}
+      textarea:focus{border-color:var(--gold)}
+      textarea::placeholder{color:var(--text-muted);font-style:italic}
+
+      /* Combat */
+      .turn-bar{display:flex;align-items:center;gap:8px;margin-bottom:12px;flex-wrap:wrap}
+      .turn-info{font-family:'Cinzel',serif;font-size:13px;color:var(--gold-light);flex:1;text-align:center;letter-spacing:.05em}
+      .round-badge{font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--text-dim);background:var(--bg3);border:1px solid var(--border);border-radius:4px;padding:4px 10px}
+      .ctable{width:100%;border-collapse:collapse}
+      .ctable th{font-family:'Cinzel',serif;font-size:9px;letter-spacing:.15em;color:var(--text-dim);text-transform:uppercase;padding:0 8px 9px;text-align:left;border-bottom:1px solid var(--border)}
+      .ctable th.c{text-align:center}
+      .crow td{padding:8px;border-bottom:1px solid rgba(201,168,76,.07);vertical-align:middle;transition:background .2s}
+      .crow.act{background:rgba(201,168,76,.07)}
+      .crow.act td:first-child{border-left:2px solid var(--gold)}
+      .crow:last-child td{border-bottom:none}
+      .cname{font-size:15px;font-weight:600;color:var(--text)}
+      .cname.act{color:var(--gold-light)}
+      .ctypes{display:flex;gap:5px;margin-top:3px}
+      .hp-nums{font-family:'JetBrains Mono',monospace;font-size:14px;font-weight:500;text-align:center}
+      .hpbar{width:72px;height:3px;background:var(--bg2);border-radius:2px;margin:4px auto 0;overflow:hidden}
+      .hpfill{height:100%;border-radius:2px;transition:width .35s,background .35s}
+      .initn{text-align:center;font-family:'JetBrains Mono',monospace;font-size:16px;font-weight:500;color:var(--gold)}
+      .dmg-row{display:flex;gap:4px;align-items:center;justify-content:center}
+      input.di{width:52px;background:var(--bg2);border:1px solid var(--border);border-radius:4px;color:var(--text);font-family:'JetBrains Mono',monospace;font-size:12px;padding:5px 5px;text-align:center;outline:none;transition:border-color .2s}
+      input.di:focus{border-color:var(--gold)}
+
+      /* Add row */
+      .addrow{display:flex;gap:7px;flex-wrap:wrap;align-items:flex-end;margin-top:12px;padding-top:12px;border-top:1px solid var(--border)}
+      .af{display:flex;flex-direction:column;gap:3px}
+      .af label{font-family:'Cinzel',serif;font-size:9px;letter-spacing:.12em;color:var(--text-dim);text-transform:uppercase}
+      input.ai{background:var(--bg2);border:1px solid var(--border);border-radius:4px;color:var(--text);font-family:'Crimson Text',serif;font-size:14px;padding:7px 9px;outline:none;transition:border-color .2s}
+      input.ai:focus{border-color:var(--gold)}
+      input.ai::placeholder{color:var(--text-muted)}
+      input.ai[type=number]{width:66px;font-family:'JetBrains Mono',monospace}
+      .tsm{background:var(--bg2);border:1px solid var(--border);border-radius:4px;color:var(--text);font-family:'Cinzel',serif;font-size:9px;letter-spacing:.05em;padding:7px 7px;outline:none;cursor:pointer}
+
+      /* Buttons */
+      .btn{font-family:'Cinzel',serif;font-size:9px;letter-spacing:.1em;padding:7px 13px;border-radius:4px;border:1px solid var(--border-s);background:transparent;color:var(--gold);cursor:pointer;text-transform:uppercase;transition:all .15s;white-space:nowrap}
+      .btn:hover{background:var(--gold-dim);border-color:var(--gold)}
+      .btn:active{transform:scale(.97)}
+      .btn.pri{background:var(--gold-dim);border-color:var(--gold);color:var(--gold-light)}
+      .btn.pri:hover{background:rgba(201,168,76,.2)}
+      .btn.dan{border-color:rgba(204,51,51,.5);color:#E06060}
+      .btn.dan:hover{background:rgba(139,32,32,.3)}
+      .btn.sm{font-size:8px;padding:5px 9px}
+
+      /* Player view */
+      .pheader{text-align:center;padding:16px 16px 12px;border-bottom:1px solid var(--border);margin-bottom:16px}
+      .psname{font-family:'Cinzel',serif;font-size:15px;color:var(--gold-light);margin-bottom:3px}
+      .pqname{font-size:14px;color:var(--text-dim);font-style:italic}
+      .pgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:10px;padding:0 16px;margin-bottom:16px}
+      .pcard{background:var(--bg3);border:1px solid var(--border);border-radius:8px;padding:14px 10px;text-align:center;position:relative;overflow:hidden}
+      .pcard::before{content:'';position:absolute;top:0;left:0;right:0;height:2px}
+      .pcard.ok::before{background:var(--green-l)}
+      .pcard.wa::before{background:var(--amber-l)}
+      .pcard.da::before{background:var(--red-l)}
+      .pcard.ko::before{background:var(--text-muted)}
+      .pcname{font-family:'Cinzel',serif;font-size:10px;letter-spacing:.1em;color:var(--text-dim);margin-bottom:7px;text-transform:uppercase}
+      .pchp{font-family:'Cinzel',serif;font-size:34px;font-weight:700;line-height:1;margin-bottom:2px}
+      .pchp.ok{color:var(--green-l)}
+      .pchp.wa{color:var(--amber-l)}
+      .pchp.da{color:var(--red-l)}
+      .pchp.ko{color:var(--text-muted)}
+      .pcmax{font-size:12px;color:var(--text-dim);margin-bottom:7px}
+      .pcbar{height:3px;background:var(--bg2);border-radius:2px;overflow:hidden}
+      .pcfill{height:100%;border-radius:2px;transition:width .4s}
+      .ilist{padding:0 16px 16px}
+      .irow{display:flex;align-items:center;gap:10px;padding:9px 12px;border-radius:6px;margin-bottom:3px;border:1px solid transparent;transition:all .2s}
+      .irow.act{background:rgba(201,168,76,.08);border-color:var(--gold-dark)}
+      .inum{font-family:'JetBrains Mono',monospace;font-size:17px;font-weight:500;color:var(--gold);min-width:28px}
+      .iname{font-family:'Crimson Text',serif;font-size:15px;flex:1;font-weight:600}
+      .irow.act .iname{color:var(--gold-light)}
+      .iact{font-size:10px;color:var(--gold);font-family:'Cinzel',serif;letter-spacing:.1em;text-transform:uppercase}
+
+      /* Misc */
+      hr.div{border:none;border-top:1px solid var(--border);margin:14px 16px}
+      .empty{text-align:center;padding:28px;color:var(--text-dim);font-style:italic;font-size:14px}
+      .notif{position:fixed;bottom:18px;right:18px;background:var(--gold-dim);border:1px solid var(--gold);border-radius:6px;padding:9px 14px;font-family:'Cinzel',serif;font-size:10px;letter-spacing:.1em;color:var(--gold-light);transform:translateY(50px);opacity:0;transition:all .3s;z-index:100}
+      .notif.show{transform:translateY(0);opacity:1}
+      @keyframes fi{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:translateY(0)}}
+      .fi{animation:fi .22s ease forwards}
+
+      .hidden {
+          visibility: hidden;
+      }
+
+      body:not(.hidden) {
+          animation: fadein 200ms ease-in-out forwards;
+      }
+
+      @keyframes fadein {
+          0% {
+              opacity: 0;
+          }
+
+          50% {
+              opacity: 0;
+          }
+
+          100% {
+              opacity: 1;
+          }
+      }
+      :root {
+          --spacing: 3px;
+      }
+
+      body.serif,
+      body.serif button {
+          font-family: 'PT Serif', serif;
+      }
+
+      body.embed {
+          margin: 5px 0 0 0;
+          padding-left: var(--spacing);
+      }
+
+      .hidden {
+          display: none;
+      }
+
+      #dice-buttons,
+      #default-dice {
+          display: flex;
+          flex-wrap: wrap;
+      }
+
+      #dice-buttons button:not(:last-child),
+      #default-dice {
+          margin-right: var(--spacing);
+      }
+
+      button, .button, input {
+          transition: background 20ms ease-in 0s;
+          font-size: 1rem;
+          padding: 5px;
+          border-radius: var(--spacing);
+          background-color: transparent;
+          border: 1px solid rgba(246, 226, 8, 0.16);
+          margin-bottom: var(--spacing);
+          text-decoration: none;
+      }
+
+      .small {
+          font-size: smaller;
+      }
+
+      input {
+          width: 60px;
+      }
+
+      #add-custom-die {
+          margin-bottom: 0;
+          border-radius: 0 var(--spacing) var(--spacing) 0;
+          border-left: 0px;
+          background-color: #3aa15b;
+          color: #fff;
+      }
+
+      .top-buttons {
+          display: flex;
+          align-items: center;
+          margin-bottom: var(--spacing);
+      }
+
+      .top-buttons button {
+          margin-bottom: 0;
+      }
+
+      #total-container {
+          margin-left: var(--spacing);
+      }
+
+      #config-container {
+          margin-bottom: var(--spacing);
+      }
+
+      #config-container input {
+          margin-bottom: 0;
+          margin-left: var(--spacing);
+      }
+
+      input#custom-die-input {
+          border-radius: var(--spacing) 0 0 var(--spacing);
+          border-right: 0px;
+          margin-right: 0;
+      }
+
+      #config-container > div:not(:last-child) {
+          margin-bottom: var(--spacing);
+      }
+
+      button.dieNumber, button.removeDie {
+          margin-bottom: 0;
+      }
+
+      .dieContainer {
+          margin-bottom: var(--spacing);
+      }
+
+      button:hover, .button:hover,
+      button:focus-visible, .button:focus-visible {
+          background: rgba(55,53,47,0.08) none repeat;
+          outline: none;
+      }
+
+      button:focus, .button:focus {
+          outline: none;
+      }
+
+      button.removeDie {
+          border-left: 0px;
+          border-radius: 0 var(--spacing) var(--spacing) 0;
+          background-color: #FE7369;
+          color: rgba(255, 255, 255, 0.9);
+      }
+
+      button.dieNumber {
+          border-radius: var(--spacing) 0 0 var(--spacing);
+          width: fit-content;
+      }
+
+      .customDieContainer {
+          margin-right: var(--spacing);
+      }
+
+      button.customDieButton {
+          border-radius: var(--spacing) 0 0 var(--spacing);
+          margin-right: 0 !important;
+      }
+
+      .total {
+          margin-right: var(--spacing);
+      }
+
+      #dice {
+          display: flex;
+          flex-wrap: wrap;
+          margin-top: var(--spacing);
+      }
+
+      .die {
+          margin-right: var(--spacing);
+          border-radius: var(--spacing);
+      }
+
+      .dieContainer.showing {
+          animation: buttonzoomin 100ms ease-in-out forwards;
+      }
+
+      .dieContainer.hiding {
+          opacity: 0;
+          animation: buttonzoomout 100ms ease-in-out;
+      }
+
+      .dieNumber {
+          border-right: 0;
+      }
+
+      .natural .die {
+          /* box-shadow: 0 0 var(--spacing) 0 gold; */
+          animation: buttonglow 200ms ease-in-out forwards;
+      }
+
+      body {
+          color:var(--gold-light);
+      }
+
+      body button, body.dark .button, body.dark input, #dice-count-input, #custom-die-input {
+          background-color: var(--bg3);
+          color:var(--gold-light);
+          border: 1px solid rgba(255, 255, 255, 0.14);
+      }
+
+      body button:hover, body.dark .button:hover {
+          background: var(--bg4) none repeat scroll 0% 0%;
+      }
+
+      @keyframes buttonzoomin {
+          0% {
+              transform: scale(0.9);
+              opacity: 0;
+          }
+
+          80% {
+              transform: scale(1.05);
+          }
+          100% {
+              transform: scale(1.0);
+              opacity: 1;
+          }
+      }
+
+      @keyframes buttonzoomout {
+          from {
+              opacity: 1;
+          }
+          to {
+              transform: scale(0.9);
+              opacity: 0;
+              visibility: hidden;
+          }
+      }
+
+      @keyframes buttonglow {
+          0% {
+              box-shadow: 0 0 0px 0 gold;
+          }
+
+          50% {
+              box-shadow: 0 0 50px 0 gold;
+          }
+          100% {
+              box-shadow: 0 0 var(--spacing) 0 gold;
+          }
+      }
+
+    </style>
+    <script>
+      const queryString = window.location.search;
+      const urlParams = new URLSearchParams(queryString);
+      const dieObject = {
+          roll: 0,
+          sides: 0
+      }
+
+      // Serif font support
+      if (urlParams.get('font') == 'serif') {
+          document.body.classList.add("serif");
+          document.body.classList.remove("hidden");
+      } else {
+          document.body.classList.remove("hidden");
+      }
+
+      // Generate random number between 1 and max
+      function ranNum(max) {
+          return Math.floor(Math.random() * max) + 1;
+      }
+
+      // Play dice roll sounds, never playing the same one twice in a row
+
+      var oldSound = 0;
+
+      function sound(thisRoll, sides) {
+          let newSound = ranNum(10);
+          while (newSound == oldSound) {
+              newSound = ranNum(10);
+          }
+          new Audio(`sound/roll${newSound}.ogg`).play();
+          oldSound = newSound;
+          if (sides == 20 && thisRoll == 20) {
+              setTimeout(() => {
+                  new Audio('sound/natural.ogg').play();
+              }, 200);
+          }
+          if (thisRoll == 1 && sides == 20) {
+              setTimeout(() => {
+                  new Audio('sound/critfail.ogg').play();
+              }, 200);
+          }
+      }
+
+      // Roll using ranNum and calculate statistics
+
+      function roll(sides) {
+          let thisRoll = ranNum(sides);
+          if (urlParams.get('sound') == 'true') {
+              sound(thisRoll, sides);
+          }
+          return thisRoll;
+      }
+
+      // Add new dice on clicking add die button
+
+      function addDie(sides, storedRoll, shouldCalcStats = true) {
+          let diceCountInput = document.querySelector('#dice-count-input');
+          let diceCount = diceCountInput.value;
+          for (let i = 0; i < diceCount; i++) {
+              let dieNumber = 0;
+              if (storedRoll) {
+                  dieNumber = storedRoll;
+              } else {
+                  dieNumber = roll(sides);
+              }
+              let dieContainer = document.createElement("div");
+              dieContainer.classList.add("dieContainer");
+              if (sides == 20 && dieNumber == 20) {
+                  dieContainer.classList.add("natural");
+              }
+              dieContainer.classList.toggle("showing");
+              let dieTemplate = `<div class="die">
+                  <button class="dieNumber" onclick="reRoll(this)" data-sides="${sides}" data-roll="${dieNumber}" title="Reroll this d${sides}"><strong class="number">${dieNumber}</strong> (${sides})</span>
+                  <button class="removeDie" onclick="removeDie(this)" title="Remove this d${sides}">−</button>
+              </div>`
+              dieContainer.innerHTML = dieTemplate;
+              document.querySelector('#dice').appendChild(dieContainer);
+              setTimeout(() => {
+                  dieContainer.classList.toggle("showing");
+              }, 100);
+          }
+          if (shouldCalcStats) {
+              calcStats();
+          }
+      }
+
+      function constructTotals(total, hi, lo) {
+          document.querySelector('#total-container').innerHTML = `
+              <span class="total">Total: ${total} | Hi: ${hi} | Lo: ${lo}</span>
+          `;
+      }
+
+      constructTotals(0, 0, 0);
+
+      function addDiceFromStorage() {
+          if (localStorage.getItem('dice')) {
+              let diceFromStorage = JSON.parse(localStorage.getItem('dice'));
+              for (let i = 0; i < diceFromStorage.length; i++) {
+                  addDie(diceFromStorage[i].sides, diceFromStorage[i].roll, shouldCalcStats = false);
+              }
+              calcStats();
+          }
+      }
+
+      addDiceFromStorage();
+
+      // Destroy one die
+
+      function removeDie(e) {
+          e.parentNode.parentNode.classList.toggle('hiding');
+          setTimeout(() => {
+              e.parentNode.parentNode.parentNode.removeChild(e.parentNode.parentNode);
+          }, 100);
+          if (document.querySelectorAll('.dieContainer:not(.hiding)').length == 0) {
+              localStorage.removeItem('dice');
+          }
+          calcStats();
+      }
+
+      // Destroy all dice
+
+      function removeAllDice() {
+          document.querySelector('#dice').innerHTML = "";
+
+          let customDieContainers = document.querySelectorAll('.customDieContainer');
+          for (let i = 0; i < customDieContainers.length; i++) {
+              customDieContainers[i].parentNode.removeChild(customDieContainers[i]);
+          }
+
+          localStorage.removeItem('dice');
+          localStorage.removeItem('customDice');
+
+          calcStats();
+      }
+
+      // Re-roll die when result is clicked
+
+      function reRoll(e, shouldCalcStats = true) {
+          let sides = e.dataset.sides;
+          e.children[0].innerHTML = roll(sides);
+          e.dataset.roll = e.children[0].innerHTML;
+          let dieNumber = e.dataset.roll;
+          if (sides == 20 && dieNumber == 20) {
+              e.parentNode.parentNode.classList.add("natural");
+          } else {
+              e.parentNode.parentNode.classList.remove("natural");
+          }
+          if (shouldCalcStats) {
+              calcStats();
+          }
+      }
+
+      // Calculate total of rolls and hi & lo roll
+      var dice = [];
+
+      function calcStats() {
+          let rolls = [];
+          dice = [];
+          let total = 0;
+          let hi = 0;
+          let lo = 0;
+          let diceElements = document.querySelectorAll('.dieContainer:not(.hiding) .dieNumber');
+          for (i = 0; i < diceElements.length; i++) {
+              let thisRoll = parseInt(diceElements[i].dataset.roll);
+              rolls.push(thisRoll);
+              total += thisRoll;
+              hi = Math.max.apply(Math, rolls);
+              lo = Math.min.apply(Math, rolls);
+              let thisDie = Object.create(dieObject);
+              thisDie.roll = thisRoll;
+              thisDie.sides = parseInt(diceElements[i].dataset.sides)
+              dice.push(thisDie);
+          }
+          localStorage.setItem('dice', JSON.stringify(dice));
+          constructTotals(total, hi, lo);
+          console.log('Calcstats run');
+      }
+
+      // Detect if page is in an iFrame
+
+      function inIframe() {
+          try {
+              return window.self !== window.top;
+          } catch (e) {
+              return true;
+          }
+      }
+
+      // If an an iFrame, add class to body for reduced margins
+      if (inIframe()) {
+          document.body.classList.add("embed");
+      }
+
+      function toggleCountInput() {
+          let diceCountContainer = document.querySelector('#config-container');
+          diceCountContainer.classList.toggle('hidden');
+          // If #toggle-count-input contains "⬇️"
+          if (document.querySelector('#toggle-count-input').innerHTML.includes('⬇️')) {
+              document.querySelector('#toggle-count-input').innerHTML = "⚙️⬆️";
+          } else {
+              document.querySelector('#toggle-count-input').innerHTML = "⚙️⬇️";
+          }
+      }
+
+      // Add custom die
+      function addCustomDie(sides = document.querySelector('#custom-die-input').value) {
+          if (sides > 0) {
+              let customDieTemplate = `
+                  <div class="customDieContainer">
+                      <button class="customDieButton" id="d${sides}" onclick="addDie(${sides})" type="button" title="Add a d${sides}">+d${sides}</button><button class="removeDie" onclick="removeDieButton(this)">−</button>
+                  </div>
+              `;
+
+              document.querySelector('#dice-buttons').innerHTML += customDieTemplate;
+
+              document.querySelector('#custom-die-input').value = "";
+
+              storeCustomDice();
+          }
+      }
+
+      // Custom die input event listener
+      document.querySelector('#custom-die-input').addEventListener('keyup', function (e) {
+          if (e.keyCode == 13) {
+              addCustomDie();
+          }
+      });
+
+      // Remove custom die button
+      function removeDieButton(e) {
+          e.parentNode.parentNode.removeChild(e.parentNode);
+          storeCustomDice();
+      }
+
+      // Store custom dice
+      function storeCustomDice() {
+          let customDieContainers = document.querySelectorAll('.customDieContainer');
+
+          let customDice = [];
+
+          for (let i = 0; i < customDieContainers.length; i++) {
+              let thisDie = customDieContainers[i].children[0].id;
+              let thisDieValue = thisDie.substring(1);
+              let thisDieObject = Object.create(dieObject);
+              thisDieObject.sides = thisDieValue;
+              customDice.push(thisDieObject);
+          }
+
+          localStorage.setItem('customDice', JSON.stringify(customDice));
+      }
+
+      // Add custom dice from storage
+      function addCustomDiceFromStorage() {
+          if (localStorage.getItem('customDice')) {
+              let customDiceFromStorage = JSON.parse(localStorage.getItem('customDice'));
+              for (let i = 0; i < customDiceFromStorage.length; i++) {
+                  addCustomDie(customDiceFromStorage[i].sides);
+              }
+          }
+      }
+
+      addCustomDiceFromStorage();
+
+      // Reroll all dice
+      function rerollAll() {
+          let diceNumbers = document.querySelectorAll('.dieNumber');
+          for (let i = 0; i < diceNumbers.length; i++) {
+              reRoll(diceNumbers[i], shouldCalcStats = false);
+          };
+          calcStats();
+      }
+
+      // dark mode
+      // on page load, and when prefers-color-scheme changes, add .dark to body if dark is preferred
+      function colorScheme() {
+          if (window.matchMedia('(prefers-color-scheme: dark)').matches && !(urlParams.get('color-scheme') == 'light')) {
+              document.body.classList.add('dark');
+          } else {
+              document.body.classList.remove('dark');
+          }
+          if (urlParams.get('color-scheme') == 'light') {
+              document.body.classList.remove('dark');
+          } else if (urlParams.get('color-scheme') == 'dark') {
+              document.body.classList.add('dark');
+          }
+      }
+
+      // Function to apply the default dice setting
+      function applyDefaultDiceSetting() {
+          let isChecked = document.getElementById('default-dice-checkbox').checked;
+          let defaultDiceContainer = document.getElementById('default-dice');
+          defaultDiceContainer.style.display = isChecked ? 'flex' : 'none';
+      }
+
+      // Function to handle checkbox change
+      function toggleDefaultDice() {
+          let isChecked = document.getElementById('default-dice-checkbox').checked;
+          localStorage.setItem('defaultDiceEnabled', isChecked);
+          applyDefaultDiceSetting();
+      }
+
+      // Event listener for the checkbox
+      document.getElementById('default-dice-checkbox').addEventListener('change', toggleDefaultDice);
+
+      // Apply settings on page load
+      document.addEventListener('DOMContentLoaded', () => {
+          let storedSetting = localStorage.getItem('defaultDiceEnabled');
+          document.getElementById('default-dice-checkbox').checked = storedSetting !== null ? storedSetting === 'true' : true;
+          applyDefaultDiceSetting();
+      });
+
+      colorScheme();
+
+      window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', colorScheme);
     
-    <script src="dice-functions.js"></script>
+    </script>
     
     <div class="app">
       <header>
@@ -200,7 +899,256 @@
 
     <div class="notif" id="notif"></div>
 
-    <script src="dnd-functions.js"></script>
+    <script>
+      // ═══════════════════════════════════════════════════
+      // DONNÉES — Remplace par tes vraies données
+      // ═══════════════════════════════════════════════════
+      const DATA = {
+        sessions:[
+          {id:'s1',nom:"Session 4 — L'éveil du Temple du Feu",statut:'En cours',quetes:['q1','q2']},
+          {id:'s2',nom:'Session 5 — Les Mines Goron',statut:'Non commencée',quetes:['q3']},
+          {id:'s3',nom:'Session 6 — Le Retour à Kakariko',statut:'Non commencée',quetes:['q4','q5']}
+        ],
+        quetes:{
+          q1:{id:'q1',nom:"L'éveil du Temple du Feu",type:'Principale',statut:'En cours',
+            donneur:'Daruk, chef des Gorons',lieu:'Mont Couronnement — Temple du Feu',
+            recompense:'200 rubis + Amulette du Feu',
+            scenario:"Les héros infiltrent le Temple du Feu pour briser le sceau retenant un Goron prisonnier. Ils évitent les gardes Lizalfos et activent trois braseros sacrés dans l'ordre exact. Un Golem de lave monte la garde dans la salle centrale.",
+            objectif:"Activer les trois braseros pour libérer l'accès à la salle du boss.",
+            description:"Le temple s'est réveillé suite à la corruption du cristal de feu par Ganon. Sans intervention, le Mont Couronnement entrera en éruption d'ici trois lunes."},
+          q2:{id:'q2',nom:'La pierre perdue de Darunia',type:'Secondaire',statut:'Non commencée',
+            donneur:'Gorko le Vieux',lieu:'Mines inférieures Goron',
+            recompense:'75 rubis + Potion de vigueur ×2',
+            scenario:"Un vieil Goron a perdu une pierre ancestrale lors d'une avalanche. Elle est gardée par des Skulltulas géantes dans les galeries inférieures.",
+            objectif:'Retrouver la Pierre de Darunia dans les mines inférieures.',
+            description:"Objet sans valeur marchande mais d'une importance culturelle immense pour le clan."},
+          q3:{id:'q3',nom:'Sauver les mineurs Goron',type:'Principale',statut:'En cours',
+            donneur:'Biggoron',lieu:'Mines Goron — Niveau 3',
+            recompense:'Épée Goron forgée sur mesure',
+            scenario:"Trois mineurs sont piégés dans une section effondrée. Les héros empruntent les galeries est et neutralisent le Dodongo géant bloquant le passage principal.",
+            objectif:'Neutraliser le Dodongo géant et ouvrir le passage effondré.',
+            description:"L'effondrement n'est pas naturel — des traces d'explosifs ont été trouvées."},
+          q4:{id:'q4',nom:'Le mystère du puits',type:'Secondaire',statut:'Non commencée',
+            donneur:'Maire de Kakariko',lieu:'Village Kakariko — Vieux puits',
+            recompense:'Lentille des vérités',
+            scenario:"Des bruits étranges viennent du vieux puits depuis le réveil du Temple des Ombres. Les habitants sont terrifiés et n'osent plus s'en approcher la nuit.",
+            objectif:'Investiguer le puits et identifier la source des perturbations.',
+            description:"Le puits cache l'entrée d'un réseau Sheikah relié au Temple des Ombres."},
+          q5:{id:'q5',nom:'Escorter la marchande',type:'Secondaire',statut:'Non commencée',
+            donneur:'Impa',lieu:'Route Hyrule — Plaine',
+            recompense:'100 rubis + Objet rare au choix',
+            scenario:"Une marchande Sheikah doit rejoindre Castle Town mais la route est infestée de Stalfos. Elle transporte secrètement des documents pour la résistance.",
+            objectif:"Escorter la marchande jusqu'à Castle Town sans incident.",
+            description:"La marchande est en réalité une espionne. Les documents concernent les failles dans la défense de Ganon."}
+        }
+      };
+
+      // ═══════════════════════════════════════════════════
+      // ÉTAT
+      // ═══════════════════════════════════════════════════
+      let mode='mj', sess=null, quest=null;
+      let comb=[], turn=0, round=1;
+      let notes={};
+
+      // ═══════════════════════════════════════════════════
+      // INIT
+      // ═══════════════════════════════════════════════════
+      (function init(){
+        const sel=document.getElementById('ssel');
+        DATA.sessions.forEach(s=>{
+          const o=document.createElement('option');
+          o.value=s.id; o.textContent=s.nom+' — '+s.statut;
+          sel.appendChild(o);
+        });
+      })();
+
+      // ═══════════════════════════════════════════════════
+      // MODE
+      // ═══════════════════════════════════════════════════
+      function setMode(m){
+        mode=m;
+        document.getElementById('bmj').classList.toggle('active',m==='mj');
+        document.getElementById('bpl').classList.toggle('active',m==='pl');
+        document.getElementById('vmj').style.display=m==='mj'?'block':'none';
+        document.getElementById('vpl').style.display=m==='pl'?'block':'none';
+        if(m==='pl') renderPV();
+      }
+
+      // ═══════════════════════════════════════════════════
+      // SESSION
+      // ═══════════════════════════════════════════════════
+      function loadSess(){
+        const v=document.getElementById('ssel').value;
+        quest=null; comb=[]; turn=0; round=1;
+        document.getElementById('qdetail').style.display='none';
+        if(!v){document.getElementById('pq').style.display='none';return;}
+        sess=DATA.sessions.find(s=>s.id===v);
+        document.getElementById('pq').style.display='block';
+        renderQ();
+      }
+
+      // ═══════════════════════════════════════════════════
+      // QUÊTES
+      // ═══════════════════════════════════════════════════
+      const SB={
+        'En cours':'bb','Non commencée':'bk','Terminée':'bg','Échouée':'br',
+        'Principale':'bo','Secondaire':'ba','Autres':'bk'
+      };
+      function renderQ(){
+        const qs=sess.quetes.map(id=>DATA.quetes[id]).filter(q=>q&&(q.statut==='En cours'||q.statut==='Non commencée'));
+        document.getElementById('qcount').textContent=qs.length;
+        document.getElementById('qlist').innerHTML=qs.map(q=>`
+          <div class="qcard ${quest&&quest.id===q.id?'sel':''}" onclick="selQ('${q.id}')">
+            <div class="qname">${q.nom}</div>
+            <div class="qmeta">
+              <span class="badge ${SB[q.statut]||'bk'}">${q.statut}</span>
+              <span class="badge ${SB[q.type]||'bk'}">${q.type}</span>
+            </div>
+            <div class="qloc">${q.lieu}</div>
+          </div>`).join('');
+      }
+
+      function selQ(id){
+        if(quest) notes[quest.id]=document.getElementById('dnotes').value;
+        quest=DATA.quetes[id]; comb=[]; turn=0; round=1;
+        renderQ();
+        document.getElementById('dtitle').childNodes[0].textContent=quest.nom+' ';
+        document.getElementById('dsc').textContent=quest.scenario;
+        document.getElementById('dobj').textContent=quest.objectif;
+        document.getElementById('ddon').textContent=quest.donneur;
+        document.getElementById('dlieu').textContent=quest.lieu;
+        document.getElementById('drec').textContent=quest.recompense;
+        document.getElementById('ddesc').textContent=quest.description;
+        document.getElementById('dnotes').value=notes[quest.id]||'';
+        const d=document.getElementById('qdetail');
+        d.style.display='block'; d.classList.remove('fi'); void d.offsetWidth; d.classList.add('fi');
+        renderC(); notify('Quête : '+quest.nom);
+      }
+
+      // ═══════════════════════════════════════════════════
+      // COMBAT
+      // ═══════════════════════════════════════════════════
+      function hpc(cur,max){const p=cur/max;return p>0.6?'#4DAA70':p>0.3?'#C87820':cur>0?'#CC3333':'#4A3820'}
+      function etat(cur,max){
+        if(cur<=0) return '<span class="badge bk">KO</span>';
+        const p=cur/max;
+        if(p>0.6) return '<span class="badge bg">Intact</span>';
+        if(p>0.3) return '<span class="badge ba">Blessé</span>';
+        return '<span class="badge br">Critique</span>';
+      }
+      function tbadge(t){
+        if(t==='joueur') return '<span class="badge bb">Joueur</span>';
+        if(t==='pnj') return '<span class="badge bg">Allié</span>';
+        return '<span class="badge br">Ennemi</span>';
+      }
+      function renderC(){
+        const tb=document.getElementById('ctbody');
+        if(!comb.length){
+          tb.innerHTML='<tr><td colspan="6"><div class="empty">Ajoute des participants pour démarrer le combat</div></td></tr>';
+          document.getElementById('tlabel').textContent='Aucun combat en cours';
+          document.getElementById('rbadge').textContent='Round —';
+          return;
+        }
+        tb.innerHTML=comb.map((c,i)=>{
+          const pct=Math.round(c.pvCur/c.pvMax*100);
+          const act=i===turn;
+          return `<tr class="crow${act?' act':''}">
+            <td>
+              <div class="cname${act?' act':''}">${act?'▶ ':''}${c.name}</div>
+              <div class="ctypes">${tbadge(c.type)}${c.ca?'<span class="badge bk">CA '+c.ca+'</span>':''}</div>
+            </td>
+            <td class="initn">${c.init}</td>
+            <td>
+              <div class="hp-nums" style="color:${hpc(c.pvCur,c.pvMax)}">${c.pvCur}<span style="font-size:11px;color:var(--text-dim)">/${c.pvMax}</span></div>
+              <div class="hpbar"><div class="hpfill" style="width:${pct}%;background:${hpc(c.pvCur,c.pvMax)}"></div></div>
+            </td>
+            <td>
+              <div class="dmg-row">
+                <input class="di" id="d${i}" type="number" placeholder="0" min="0" onkeydown="if(event.key==='Enter')applyD(${i})">
+                <button class="btn sm dan" onclick="applyD(${i})">−PV</button>
+                <button class="btn sm" onclick="healD(${i})">+PV</button>
+              </div>
+            </td>
+            <td style="text-align:center">${etat(c.pvCur,c.pvMax)}</td>
+            <td style="text-align:center"><button class="btn sm" onclick="remC(${i})">✕</button></td>
+          </tr>`;
+        }).join('');
+        document.getElementById('tlabel').textContent='Tour de '+comb[turn].name;
+        document.getElementById('rbadge').textContent='Round '+round;
+        if(mode==='pl') renderPV();
+      }
+
+      function addC(){
+        const name=document.getElementById('nn').value.trim();
+        const type=document.getElementById('nt').value;
+        const init=parseInt(document.getElementById('ni').value)||0;
+        const pv=parseInt(document.getElementById('np').value)||10;
+        const ca=parseInt(document.getElementById('nc').value)||0;
+        if(!name){notify('Saisis un nom');return;}
+        comb.push({name,type,init,pvMax:pv,pvCur:pv,ca});
+        comb.sort((a,b)=>b.init-a.init); turn=0;
+        ['nn','ni','np','nc'].forEach(id=>document.getElementById(id).value='');
+        document.getElementById('nn').focus();
+        renderC(); notify(name+' ajouté(e)');
+      }
+      function applyD(i){
+        const v=parseInt(document.getElementById('d'+i).value)||0;
+        if(!v)return;
+        comb[i].pvCur=Math.max(0,comb[i].pvCur-v);
+        document.getElementById('d'+i).value='';
+        if(comb[i].pvCur===0) notify(comb[i].name+' est KO !');
+        renderC();
+      }
+      function healD(i){
+        const v=parseInt(document.getElementById('d'+i).value)||0;
+        if(!v)return;
+        comb[i].pvCur=Math.min(comb[i].pvMax,comb[i].pvCur+v);
+        document.getElementById('d'+i).value='';
+        renderC();
+      }
+      function remC(i){const n=comb[i].name;comb.splice(i,1);if(turn>=comb.length)turn=0;renderC();notify(n+' retiré(e)');}
+      function nextT(){if(!comb.length)return;turn=(turn+1)%comb.length;if(turn===0){round++;notify('Round '+round+' !');}renderC();}
+      function prevT(){if(!comb.length)return;if(turn===0){round=Math.max(1,round-1);turn=comb.length-1;}else turn--;renderC();}
+      function resetC(){comb.forEach(c=>c.pvCur=c.pvMax);turn=0;round=1;renderC();notify('Combat réinitialisé');}
+
+      // ═══════════════════════════════════════════════════
+      // VUE JOUEURS
+      // ═══════════════════════════════════════════════════
+      function pvClass(cur,max){if(cur<=0)return 'ko';const p=cur/max;return p>0.6?'ok':p>0.3?'wa':'da';}
+      function renderPV(){
+        document.getElementById('psn').textContent=sess?sess.nom:'—';
+        document.getElementById('pqn').textContent=quest?'Quête : '+quest.nom:'Aucune quête active';
+        const pg=document.getElementById('pcards');
+        if(!comb.length){pg.innerHTML='<div class="empty" style="grid-column:1/-1">Aucun participant enregistré</div>';}
+        else{
+          pg.innerHTML=comb.map(c=>{
+            const p=Math.round(c.pvCur/c.pvMax*100);
+            const cl=pvClass(c.pvCur,c.pvMax);
+            return `<div class="pcard ${cl}">
+              <div class="pcname">${c.name}</div>
+              <div class="pchp ${cl}">${c.pvCur}</div>
+              <div class="pcmax">/ ${c.pvMax} PV</div>
+              <div class="pcbar"><div class="pcfill" style="width:${p}%;background:${hpc(c.pvCur,c.pvMax)}"></div></div>
+              ${c.ca?'<div style="margin-top:7px;font-size:11px;color:var(--text-dim);font-family:\'JetBrains Mono\',monospace">CA '+c.ca+'</div>':''}
+            </div>`;
+          }).join('');
+        }
+        const pi=document.getElementById('pilist');
+        if(!comb.length){pi.innerHTML='<div class="empty">Aucun combat en cours</div>';return;}
+        pi.innerHTML=comb.map((c,i)=>`
+          <div class="irow${i===turn?' act':''}">
+            <div class="inum">${c.init}</div>
+            <div class="iname">${c.name}</div>
+            ${tbadge(c.type)}
+            ${etat(c.pvCur,c.pvMax)}
+            ${i===turn?'<div class="iact">▶ À jouer</div>':''}
+          </div>`).join('');
+      }
+
+      // Notif
+      let nt=null;
+      function notify(msg){const e=document.getElementById('notif');e.textContent=msg;e.classList.add('show');if(nt)clearTimeout(nt);nt=setTimeout(()=>e.classList.remove('show'),2400);}
+    </script>
 
   </body>
 </html>
