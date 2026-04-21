@@ -201,7 +201,7 @@ button, .button, input {
     padding: 5px;
     border-radius: var(--spacing);
     background-color: transparent;
-    border: 1px solid rgba(55, 53, 47, 0.16);
+    border: 1px solid rgba(246, 226, 8, 0.16);
     margin-bottom: var(--spacing);
     text-decoration: none;
 }
@@ -327,22 +327,19 @@ button.customDieButton {
     animation: buttonglow 200ms ease-in-out forwards;
 }
 
-/* dark mode start */
-body.dark {
-    background-color: #191919;
-    color: rgba(255, 255, 255, 0.9);
+body {
+    color:var(--gold-light);
 }
 
-body.dark button, body.dark .button, body.dark input {
-    background-color: #262626;
-    color: rgba(255, 255, 255, 0.9);
+body button, body.dark .button, body.dark input, #dice-count-input, #custom-die-input {
+    background-color: var(--bg3);
+    color:var(--gold-light);
     border: 1px solid rgba(255, 255, 255, 0.14);
 }
 
-body.dark button:hover, body.dark .button:hover {
-    background: rgb(71,76,80) none repeat scroll 0% 0%;
+body button:hover, body.dark .button:hover {
+    background: var(--bg4) none repeat scroll 0% 0%;
 }
-/* dark mode end */
 
 @keyframes buttonzoomin {
     0% {
